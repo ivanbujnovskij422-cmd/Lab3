@@ -1,0 +1,210 @@
+ 1. Исходный код программы (C++)
+Создайте файл main.cpp и скопируйте туда этот код. Не забудьте вписать свои ФИО и группу в функции main!
+
+#include <iostream>
+#include <string>
+#include <queue>
+#include <chrono>
+#include <vector>
+#include <iomanip>
+
+using namespace std;
+using namespace std::chrono;
+
+// Структура для хранения состояния (координаты и количество сделанных ходов)
+struct State {
+    int x, y, dist;
+};
+
+// ==========================================
+// А) Реализация очереди через статический массив
+// ==========================================
+class QueueArray {
+private:
+    static const int MAX_SIZE = 100; // Для доски 8x8 в очереди никогда не будет больше 64 элементов
+    State arr[MAX_SIZE];
+    int f, r; // front и rear
+public:
+    QueueArray() : f(0), r(0) {}
+    void push(State s) { arr[r++] = s; }
+    void pop() { f++; }
+    State front() { return arr[f]; }
+    bool empty() { return f == r; }
+    void clear() { f = 0; r = 0; }
+};
+
+// ==========================================
+// Б) Реализация очереди через связанный список
+// ==========================================
+struct Node {
+    State data;
+    Node* next;
+    Node(State s) : data(s), next(nullptr) {}
+};
+
+class QueueLinkedList {
+private:
+    Node* head;
+    Node* tail;
+public:
+    QueueLinkedList() : head(nullptr), tail(nullptr) {}
+    
+    // Правильное управление памятью при уничтожении
+    ~QueueLinkedList() { clear(); }
+
+    void push(State s) {
+        Node* newNode = new Node(s);
+        if (tail == nullptr) {
+            head = tail = newNode;
+            return;
+        }
+        tail->next = newNode;
+        tail = newNode;
+    }
+
+    void pop() {
+        if (head == nullptr) return;
+        Node* temp = head;
+        head = head->next;
+        if (head == nullptr) tail = nullptr;
+        delete temp;
+    }
+
+    State front() { return head->data; }
+    
+    bool empty() { return head == nullptr; }
+    
+    void clear() {
+        while (!empty()) {
+            pop();
+        }
+    }
+};
+
+// ==========================================
+// В) Общий алгоритм BFS (Шаблонный)
+// ==========================================
+
+// Возможные ходы коня (8 направлений)
+int dx[] = {-2, -1, 1, 2, -2, -1, 1, 2};
+int dy[] = {-1, -2, -2, -1, 1, 2, 2, 1};
+
+// Проверка выхода за пределы доски
+bool isValid(int x, int y) {
+    return (x >= 0 && x < 8 && y >= 0 && y < 8);
+}
+
+// Шаблонная функция для использования любой из трех очередей
+template <typename Q>
+int getMinKnightMoves(string start, string end, Q& q) {
+    int startX = start[0] - 'A';
+    int startY = start[1] - '1';
+    int endX = end[0] - 'A';
+    int endY = end[1] - '1';
+
+    if (startX == endX && startY == endY) return 0;
+
+    bool visited[8][8] = {false};
+    
+    q.push({startX, startY, 0});
+    visited[startX][startY] = true;
+
+    while (!q.empty()) {
+        State current = q.front();
+        q.pop();
+
+        if (current.x == endX && current.y == endY) {
+            return current.dist;
+        }
+
+        for (int i = 0; i < 8; ++i) {
+            int nx = current.x + dx[i];
+            int ny = current.y + dy[i];
+
+            if (isValid(nx, ny) && !visited[nx][ny]) {
+                visited[nx][ny] = true;
+                q.push({nx, ny, current.dist + 1});
+            }
+        }
+    }
+    return -1; // Путь не найден (в теории для шахматной доски недостижимо)
+}
+
+// Обертка для STL очереди, так как у нее нет метода clear() из коробки
+class QueueSTL {
+    queue<State> q;
+public:
+    void push(State s) { q.push(s); }
+    void pop() { q.pop(); }
+    State front() { return q.front(); }
+    bool empty() { return q.empty(); }
+    void clear() { 
+        while(!q.empty()) q.pop(); 
+    }
+};
+
+int main() {
+    // ВЫВОД ДАННЫХ ОБ АВТОРЕ
+    cout << "========================================" << endl;
+    cout << "Автор: [Ваша Фамилия Имя Отчество]" << endl;
+    cout << "Группа: [Номер вашей группы]" << endl;
+    cout << "========================================" << endl << endl;
+
+    string startPos, endPos;
+    cout << "Введите начальную клетку (например, A5): ";
+    cin >> startPos;
+    cout << "Введите конечную клетку (например, C2): ";
+    cin >> endPos;
+
+    QueueArray qArr;
+    QueueLinkedList qList;
+    QueueSTL qSTL;
+
+    // Одиночный запуск для демонстрации результата
+    int result = getMinKnightMoves(startPos, endPos, qArr);
+    qArr.clear();
+    cout << "\nМинимальное число ходов коня: " << result << endl << endl;
+
+    // BENCHMARKING (Тестирование производительности)
+    const int ITERATIONS = 100000;
+    cout << "Запуск тестирования производительности (" << ITERATIONS << " итераций)..." << endl;
+
+    // Тест А: Массив
+    auto t1 = high_resolution_clock::now();
+    for(int i = 0; i < ITERATIONS; i++) {
+        qArr.clear();
+        getMinKnightMoves(startPos, endPos, qArr);
+    }
+    auto t2 = high_resolution_clock::now();
+    double timeArray = duration_cast<duration<double, milli>>(t2 - t1).count();
+
+    // Тест Б: Связанный список
+    auto t3 = high_resolution_clock::now();
+    for(int i = 0; i < ITERATIONS; i++) {
+        qList.clear();
+        getMinKnightMoves(startPos, endPos, qList);
+    }
+    auto t4 = high_resolution_clock::now();
+    double timeList = duration_cast<duration<double, milli>>(t4 - t3).count();
+
+    // Тест В: STL std::queue
+    auto t5 = high_resolution_clock::now();
+    for(int i = 0; i < ITERATIONS; i++) {
+        qSTL.clear();
+        getMinKnightMoves(startPos, endPos, qSTL);
+    }
+    auto t6 = high_resolution_clock::now();
+    double timeSTL = duration_cast<duration<double, milli>>(t6 - t5).count();
+
+    // Вывод таблицы
+    cout << "---------------------------------------------------" << endl;
+    cout << left << setw(30) << "Реализация очереди" << "Время (мс)" << endl;
+    cout << "---------------------------------------------------" << endl;
+    cout << left << setw(30) << "А) Статический массив" << timeArray << endl;
+    cout << left << setw(30) << "Б) Связанный список" << timeList << endl;
+    cout << left << setw(30) << "В) STL std::queue" << timeSTL << endl;
+    cout << "---------------------------------------------------" << endl;
+
+    return 0;
+}
+
