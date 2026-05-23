@@ -48,7 +48,7 @@ private:
     Node* tail;
 public:
     QueueLinkedList() : head(nullptr), tail(nullptr) {}
-    
+
     // Правильное управление памятью при уничтожении
     ~QueueLinkedList() { clear(); }
 
@@ -71,9 +71,9 @@ public:
     }
 
     State front() { return head->data; }
-    
+
     bool empty() { return head == nullptr; }
-    
+
     void clear() {
         while (!empty()) {
             pop();
@@ -86,8 +86,8 @@ public:
 // ==========================================
 
 // Возможные ходы коня (8 направлений)
-int dx[] = {-2, -1, 1, 2, -2, -1, 1, 2};
-int dy[] = {-1, -2, -2, -1, 1, 2, 2, 1};
+int dx[] = { -2, -1, 1, 2, -2, -1, 1, 2 };
+int dy[] = { -1, -2, -2, -1, 1, 2, 2, 1 };
 
 // Проверка выхода за пределы доски
 bool isValid(int x, int y) {
@@ -104,9 +104,9 @@ int getMinKnightMoves(string start, string end, Q& q) {
 
     if (startX == endX && startY == endY) return 0;
 
-    bool visited[8][8] = {false};
-    
-    q.push({startX, startY, 0});
+    bool visited[8][8] = { false };
+
+    q.push({ startX, startY, 0 });
     visited[startX][startY] = true;
 
     while (!q.empty()) {
@@ -123,7 +123,7 @@ int getMinKnightMoves(string start, string end, Q& q) {
 
             if (isValid(nx, ny) && !visited[nx][ny]) {
                 visited[nx][ny] = true;
-                q.push({nx, ny, current.dist + 1});
+                q.push({ nx, ny, current.dist + 1 });
             }
         }
     }
@@ -138,17 +138,18 @@ public:
     void pop() { q.pop(); }
     State front() { return q.front(); }
     bool empty() { return q.empty(); }
-    void clear() { 
-        while(!q.empty()) q.pop(); 
+    void clear() {
+        while (!q.empty()) q.pop();
     }
 };
 
 int main() {
     // ВЫВОД ДАННЫХ ОБ АВТОРЕ
-    cout << "========================================" << endl;
-    cout << "Автор: [Ваша Фамилия Имя Отчество]" << endl;
-    cout << "Группа: [Номер вашей группы]" << endl;
-    cout << "========================================" << endl << endl;
+    setlocale(LC_ALL, "RUS");
+
+    cout << "Автор: Буйновский Иван Игоревич" << endl;
+    cout << "Группа: 090301-ПОВа-о25" << endl;
+
 
     string startPos, endPos;
     cout << "Введите начальную клетку (например, A5): ";
@@ -171,7 +172,7 @@ int main() {
 
     // Тест А: Массив
     auto t1 = high_resolution_clock::now();
-    for(int i = 0; i < ITERATIONS; i++) {
+    for (int i = 0; i < ITERATIONS; i++) {
         qArr.clear();
         getMinKnightMoves(startPos, endPos, qArr);
     }
@@ -180,7 +181,7 @@ int main() {
 
     // Тест Б: Связанный список
     auto t3 = high_resolution_clock::now();
-    for(int i = 0; i < ITERATIONS; i++) {
+    for (int i = 0; i < ITERATIONS; i++) {
         qList.clear();
         getMinKnightMoves(startPos, endPos, qList);
     }
@@ -189,7 +190,7 @@ int main() {
 
     // Тест В: STL std::queue
     auto t5 = high_resolution_clock::now();
-    for(int i = 0; i < ITERATIONS; i++) {
+    for (int i = 0; i < ITERATIONS; i++) {
         qSTL.clear();
         getMinKnightMoves(startPos, endPos, qSTL);
     }
@@ -197,14 +198,13 @@ int main() {
     double timeSTL = duration_cast<duration<double, milli>>(t6 - t5).count();
 
     // Вывод таблицы
-    cout << "---------------------------------------------------" << endl;
+   
     cout << left << setw(30) << "Реализация очереди" << "Время (мс)" << endl;
-    cout << "---------------------------------------------------" << endl;
+
     cout << left << setw(30) << "А) Статический массив" << timeArray << endl;
     cout << left << setw(30) << "Б) Связанный список" << timeList << endl;
     cout << left << setw(30) << "В) STL std::queue" << timeSTL << endl;
-    cout << "---------------------------------------------------" << endl;
+
 
     return 0;
 }
-
